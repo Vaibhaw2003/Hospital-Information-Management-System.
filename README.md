@@ -64,3 +64,5 @@ A full-stack Hospital Information Management System (HIMS) designed to streamlin
 ---
 
 ## 📂 Project Structure
+
+This README is suitable for a **React + Express + MySQL based HIMS project** and can be directly used on GitHub.
