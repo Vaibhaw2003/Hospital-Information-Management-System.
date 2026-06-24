@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -16,8 +16,154 @@ import {
   Sun,
   Moon,
   Key,
-  User as UserIcon
+  ChevronDown,
+  Bell,
+  Activity,
+  Building2
 } from 'lucide-react';
+
+const NAV_ITEMS = [
+  {
+    name: 'Dashboard',
+    path: '/',
+    icon: LayoutDashboard,
+    roles: ['Admin', 'Receptionist', 'Doctor', 'Pharmacist']
+  },
+  {
+    name: 'Doctors',
+    path: '/doctors',
+    icon: Stethoscope,
+    roles: ['Admin', 'Receptionist']
+  },
+  {
+    name: 'Patients',
+    path: '/patients',
+    icon: Users,
+    roles: ['Admin', 'Receptionist', 'Doctor']
+  },
+  {
+    name: 'OPD Queue',
+    path: '/opd',
+    icon: ClipboardList,
+    roles: ['Admin', 'Receptionist', 'Doctor']
+  },
+  {
+    name: 'Prescriptions',
+    path: '/prescriptions',
+    icon: FileSpreadsheet,
+    roles: ['Admin', 'Doctor', 'Pharmacist']
+  },
+  {
+    name: 'Billing',
+    path: '/billing',
+    icon: Receipt,
+    roles: ['Admin', 'Receptionist']
+  },
+  {
+    name: 'Inventory',
+    path: '/inventory',
+    icon: Pill,
+    roles: ['Admin', 'Pharmacist']
+  }
+];
+
+const ROLE_COLORS = {
+  Admin:        { dot: 'bg-rose-500',   text: 'text-rose-400',   badge: 'bg-rose-500/15 text-rose-300 ring-rose-500/20' },
+  Doctor:       { dot: 'bg-blue-500',   text: 'text-blue-400',   badge: 'bg-blue-500/15 text-blue-300 ring-blue-500/20' },
+  Receptionist: { dot: 'bg-emerald-500', text: 'text-emerald-400', badge: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/20' },
+  Pharmacist:   { dot: 'bg-amber-500',  text: 'text-amber-400',  badge: 'bg-amber-500/15 text-amber-300 ring-amber-500/20' },
+};
+
+const PAGE_TITLES = {
+  '/': 'Dashboard',
+  '/doctors': 'Doctors',
+  '/patients': 'Patients',
+  '/opd': 'OPD Queue',
+  '/prescriptions': 'Prescriptions',
+  '/billing': 'Billing',
+  '/inventory': 'Inventory',
+  '/change-password': 'Change Password',
+};
+
+function SidebarContent({ navItems, isActiveRoute, handleLogout, user, closeSidebar }) {
+  const roleColor = ROLE_COLORS[user?.role] || {};
+
+  return (
+    <>
+      {/* Brand Logo */}
+      <div className="flex items-center gap-3 px-6 h-16 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #2563eb, #3b82f6)', boxShadow: '0 4px 14px rgba(37,99,235,0.40)' }}>
+          <Activity size={16} color="white" strokeWidth={2.5} />
+        </div>
+        <div>
+          <p className="text-white font-bold text-[15px] tracking-tight leading-none">HIMS</p>
+          <p className="text-white/40 text-[10px] font-medium mt-0.5">Hospital System</p>
+        </div>
+      </div>
+
+      {/* User Profile Card */}
+      <div className="mx-4 mt-4 rounded-xl p-3 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #1e40af, #2563eb)' }}>
+            {user?.username?.substring(0, 2).toUpperCase() || 'HM'}
+          </div>
+          <div className="min-w-0">
+            <p className="text-white/90 text-[13px] font-semibold truncate">{user?.username || 'Staff'}</p>
+            <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ring-1 ${roleColor.badge}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${roleColor.dot}`}></span>
+              {user?.role}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <p className="text-white/25 text-[10px] font-bold uppercase tracking-widest px-3 mb-2">Navigation</p>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActiveRoute(item.path);
+          return (
+            <Link
+              key={item.name}
+              to={item.path}
+              onClick={closeSidebar}
+              className={`nav-item ${active ? 'active' : ''}`}
+            >
+              <Icon size={16} className="nav-icon" />
+              <span>{item.name}</span>
+              {active && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Bottom Actions */}
+      <div className="px-3 pb-4 space-y-1 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px', marginTop: '4px' }}>
+        <Link
+          to="/change-password"
+          onClick={closeSidebar}
+          className="nav-item"
+        >
+          <Key size={16} className="nav-icon" />
+          Change Password
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="nav-item w-full text-left"
+          style={{ color: 'rgba(248,113,113,0.85)' }}
+        >
+          <LogOut size={16} style={{ color: 'rgba(248,113,113,0.50)' }} />
+          Sign Out
+        </button>
+      </div>
+    </>
+  );
+}
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
@@ -26,271 +172,210 @@ const DashboardLayout = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  // Define sidebar navigation items based on role
-  const getNavItems = () => {
-    const role = user?.role;
-    const items = [
-      {
-        name: 'Dashboard',
-        path: '/',
-        icon: LayoutDashboard,
-        roles: ['Admin', 'Receptionist', 'Doctor', 'Pharmacist']
-      },
-      {
-        name: 'Doctors',
-        path: '/doctors',
-        icon: Stethoscope,
-        roles: ['Admin', 'Receptionist']
-      },
-      {
-        name: 'Patients',
-        path: '/patients',
-        icon: Users,
-        roles: ['Admin', 'Receptionist', 'Doctor']
-      },
-      {
-        name: 'OPD Queue',
-        path: '/opd',
-        icon: ClipboardList,
-        roles: ['Admin', 'Receptionist', 'Doctor']
-      },
-      {
-        name: 'Prescriptions',
-        path: '/prescriptions',
-        icon: FileSpreadsheet,
-        roles: ['Admin', 'Doctor', 'Pharmacist']
-      },
-      {
-        name: 'Billing & Invoices',
-        path: '/billing',
-        icon: Receipt,
-        roles: ['Admin', 'Receptionist']
-      },
-      {
-        name: 'Medicine Inventory',
-        path: '/inventory',
-        icon: Pill,
-        roles: ['Admin', 'Pharmacist']
-      }
-    ];
+  const navItems = NAV_ITEMS.filter(item => item.roles.includes(user?.role));
 
-    return items.filter((item) => item.roles.includes(role));
-  };
-
-  const navItems = getNavItems();
-
-  // Helper to check if current route matches
   const isActiveRoute = (path) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
+    if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
-  // Get human readable role badge classes
-  const getRoleBadgeClasses = (role) => {
-    switch (role) {
-      case 'Admin': return 'bg-rose-500/10 text-rose-600 border border-rose-500/20 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30';
-      case 'Doctor': return 'bg-blue-500/10 text-blue-600 border border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30';
-      case 'Receptionist': return 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30';
-      case 'Pharmacist': return 'bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30';
-      default: return 'bg-slate-100 text-slate-700';
-    }
-  };
+  const currentTitle = PAGE_TITLES[location.pathname] || 'HIMS';
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const roleColor = ROLE_COLORS[user?.role] || {};
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-[#080b11] dark:text-slate-100 transition-colors duration-200">
-      
-      {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white/90 dark:bg-slate-950/40 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/40 flex-shrink-0">
-        <div className="h-20 flex items-center justify-between px-6 border-b border-slate-200/80 dark:border-slate-800/40">
-          <Link to="/" className="flex items-center gap-2.5 font-bold text-lg">
-            <span className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white p-2 rounded-xl shadow-lg shadow-blue-500/30 glow-blue">
-              <Stethoscope size={20} />
-            </span>
-            <span className="font-extrabold tracking-tight text-gradient-primary">HIMS Hub</span>
-          </Link>
-        </div>
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActiveRoute(item.path);
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 group ${
-                  active
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 glow-blue transform translate-x-1'
-                    : 'text-slate-500 hover:bg-slate-100/60 dark:text-slate-400 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100'
-                }`}
-              >
-                <Icon size={18} className={`transition-transform duration-300 group-hover:scale-110 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'}`} />
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="p-4 border-t border-slate-200/80 dark:border-slate-800/40">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3.5 w-full px-4 py-3.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-450 dark:hover:bg-rose-950/20 transition-all duration-300 font-semibold text-sm cursor-pointer"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen flex" style={{ background: 'var(--surface-2)' }}>
+
+      {/* ── Desktop Sidebar ── */}
+      <aside className="hidden md:flex sidebar">
+        <SidebarContent
+          navItems={navItems}
+          isActiveRoute={isActiveRoute}
+          handleLogout={handleLogout}
+          user={user}
+          closeSidebar={() => {}}
+        />
       </aside>
 
-      {/* Sidebar for Mobile */}
+      {/* ── Mobile Sidebar Overlay ── */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/60 backdrop-blur-sm">
-          <aside className="w-64 bg-white/95 dark:bg-slate-950/90 backdrop-blur-md flex flex-col h-full shadow-2xl animate-in slide-in-from-left duration-300">
-            <div className="h-20 flex items-center justify-between px-6 border-b border-slate-200/80 dark:border-slate-800/40">
-              <Link to="/" className="flex items-center gap-2.5 font-bold text-lg">
-                <span className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white p-2 rounded-xl shadow-lg">
-                  <Stethoscope size={20} />
-                </span>
-                <span className="font-extrabold tracking-tight text-gradient-primary">HIMS Hub</span>
-              </Link>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-905"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActiveRoute(item.path);
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
-                      active
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                        : 'text-slate-500 hover:bg-slate-100/60 dark:text-slate-400 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-105'
-                    }`}
-                  >
-                    <Icon size={18} />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="p-4 border-t border-slate-200/80 dark:border-slate-800/40">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3.5 w-full px-4 py-3.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-450 dark:hover:bg-rose-950/20 transition-all font-semibold text-sm"
-              >
-                <LogOut size={18} />
-                Logout
-              </button>
-            </div>
+        <div
+          className="fixed inset-0 z-50 flex md:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setSidebarOpen(false)}
+        >
+          <aside
+            className="sidebar"
+            style={{ animation: 'slideInLeft 0.2s cubic-bezier(0.16,1,0.3,1)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg"
+              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}
+            >
+              <X size={16} />
+            </button>
+            <SidebarContent
+              navItems={navItems}
+              isActiveRoute={isActiveRoute}
+              handleLogout={handleLogout}
+              user={user}
+              closeSidebar={() => setSidebarOpen(false)}
+            />
           </aside>
         </div>
       )}
 
-      {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
-        {/* Navbar */}
-        <header className="h-20 glass-navbar flex items-center justify-between px-6 md:px-8 flex-shrink-0 z-30">
-          
+      <style>{`
+        @keyframes slideInLeft {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+
+      {/* ── Main Content ── */}
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* ── Topbar ── */}
+        <header className="topbar">
           <div className="flex items-center gap-4">
+            {/* Mobile menu */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl text-slate-650 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="md:hidden btn btn-ghost btn-icon"
             >
               <Menu size={20} />
             </button>
-            <h1 className="text-lg font-bold tracking-tight text-slate-850 dark:text-white leading-tight">
-              Hospital Management System
-            </h1>
+
+            {/* Page Title */}
+            <div>
+              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <Building2 size={12} />
+                <span>HIMS Hospital</span>
+                <span style={{ color: 'var(--border-2)' }}>/</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{currentTitle}</span>
+              </div>
+              <h1 className="text-[18px] font-bold tracking-tight leading-tight mt-0.5" style={{ color: 'var(--text-primary)' }}>
+                {currentTitle}
+              </h1>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4.5">
+          <div className="flex items-center gap-2">
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl text-slate-600 dark:text-slate-350 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800/40 hover:scale-105 transition-all duration-200 cursor-pointer"
-              title="Toggle Theme"
+              className="btn btn-ghost btn-icon"
+              title={theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
             >
-              {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-indigo-600" />}
+              {theme === 'dark'
+                ? <Sun size={18} style={{ color: 'var(--text-secondary)' }} />
+                : <Moon size={18} style={{ color: 'var(--text-secondary)' }} />
+              }
             </button>
 
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2.5 text-left focus:outline-none hover:opacity-90 transition-opacity cursor-pointer"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all"
+                style={{
+                  background: dropdownOpen ? 'var(--surface-3)' : 'transparent',
+                  border: '1.5px solid',
+                  borderColor: dropdownOpen ? 'var(--border-2)' : 'transparent'
+                }}
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 border border-blue-500/20 dark:border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm shadow-inner">
-                  {user?.username ? user.username.substring(0, 2).toUpperCase() : 'UI'}
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #1e40af, #2563eb)' }}
+                >
+                  {user?.username?.substring(0, 2).toUpperCase() || 'HM'}
                 </div>
-                <div className="hidden sm:block">
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                    {user?.username || 'Staff Member'}
+                <div className="hidden sm:block text-left">
+                  <p className="text-[13px] font-semibold leading-none" style={{ color: 'var(--text-primary)' }}>
+                    {user?.username}
                   </p>
-                  <span className={`inline-block text-[9px] px-2.5 py-0.5 rounded-full font-bold mt-1 tracking-wider uppercase ${getRoleBadgeClasses(user?.role)}`}>
+                  <p className={`text-[10px] font-semibold mt-0.5 ${roleColor.text}`}>
                     {user?.role}
-                  </span>
+                  </p>
                 </div>
+                <ChevronDown
+                  size={14}
+                  style={{
+                    color: 'var(--text-muted)',
+                    transform: dropdownOpen ? 'rotate(180deg)' : 'none',
+                    transition: 'transform 0.15s ease'
+                  }}
+                />
               </button>
 
               {dropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setDropdownOpen(false)}
-                  ></div>
-                  <div className="absolute right-0 mt-3.5 w-52 glass-card rounded-2xl shadow-xl py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800/60">
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Signed in as</p>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate mt-0.5">{user?.email}</p>
-                    </div>
+                <div
+                  className="absolute right-0 mt-2 w-52 rounded-2xl overflow-hidden fade-in"
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-lg)',
+                    zIndex: 40
+                  }}
+                >
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <p className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
+                  </div>
+                  <div className="p-1.5">
                     <Link
                       to="/change-password"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-900/40 transition-colors font-medium"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors"
+                      style={{ color: 'var(--text-secondary)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <Key size={15} className="text-slate-400" />
+                      <Key size={15} style={{ color: 'var(--text-muted)' }} />
                       Change Password
                     </Link>
                     <button
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        handleLogout();
-                      }}
-                      className="flex items-center gap-2.5 w-full px-4 py-3 text-sm text-rose-650 hover:bg-rose-500/10 text-left transition-colors font-semibold cursor-pointer"
+                      onClick={() => { setDropdownOpen(false); handleLogout(); }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-medium text-left transition-colors"
+                      style={{ color: '#dc2626' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <LogOut size={15} />
-                      Logout
+                      <LogOut size={15} style={{ color: '#dc2626' }} />
+                      Sign Out
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </div>
-
           </div>
         </header>
 
-        {/* Content Wrapper */}
-        <main className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#080b11] p-6 md:p-8">
-          <div className="max-w-7xl mx-auto space-y-8">
+        {/* ── Page Content ── */}
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+          <div className="max-w-screen-xl mx-auto">
             <Outlet />
           </div>
         </main>
-
       </div>
     </div>
   );

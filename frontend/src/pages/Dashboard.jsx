@@ -1,34 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { CardSkeleton } from '../components/Skeletons';
-import {
-  Users,
-  Stethoscope,
-  Calendar,
-  Activity,
-  AlertTriangle,
-  BadgeDollarSign,
-  TrendingUp,
-  Clock,
-  ArrowRight,
-  ShieldAlert
-} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
+  Users, Stethoscope, Activity, BadgeDollarSign,
+  TrendingUp, Clock, ArrowRight, ShieldAlert,
+  CalendarDays, Pill, Package, CheckCircle2, AlertCircle
+} from 'lucide-react';
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
+  CartesianGrid, Tooltip, PieChart, Pie, Cell
 } from 'recharts';
 
+/* ─── Skeleton ─── */
+function Skel({ className = '' }) {
+  return <div className={`skeleton ${className}`} />;
+}
+
+/* ─── Custom Tooltip for chart ─── */
+const ChartTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="card-flat px-3.5 py-2.5 text-xs">
+      <p style={{ color: 'var(--text-muted)' }}>{label}</p>
+      <p className="font-bold mt-0.5" style={{ color: 'var(--brand)' }}>
+        ₹{Number(payload[0].value).toLocaleString('en-IN')}
+      </p>
+    </div>
+  );
+};
+
+const PIE_COLORS = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#0891b2', '#dc2626'];
+
+/* ─── KPI Card ─── */
+function KpiCard({ title, value, desc, iconColor, icon: Icon, accent }) {
+  return (
+    <div className={`metric-card metric-card-${accent}`}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+            {title}
+          </p>
+          <p className="text-[28px] font-extrabold tracking-tight mt-1.5 leading-none" style={{ color: 'var(--text-primary)' }}>
+            {value}
+          </p>
+        </div>
+        <div className={`icon-badge icon-badge-${iconColor}`}>
+          <Icon size={20} />
+        </div>
+      </div>
+      <p className="text-[12px] font-medium mt-4 pt-3" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
+        {desc}
+      </p>
+    </div>
+  );
+}
+
+/* ─── Dashboard ─── */
 const Dashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
@@ -38,287 +66,259 @@ const Dashboard = () => {
   const [lowStockMeds, setLowStockMeds] = useState([]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const load = async () => {
       try {
         setLoading(true);
-        
-        // 1. Fetch dashboard statistics
-        const response = await api.get('/dashboard/stats');
-        setStats(response.data.stats);
-        setCharts(response.data.charts);
-
-        // 2. Fetch today's active OPD queue for quick view
-        const opdResponse = await api.get('/opd?limit=5&status=Active');
-        setRecentQueue(opdResponse.data.opdRegistrations || []);
-
-        // 3. Fetch low stock medicines for quick view
-        const invResponse = await api.get('/inventory?limit=5&filter=low-stock');
-        setLowStockMeds(invResponse.data.medicines || []);
-
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
+        const [statsRes, opdRes, invRes] = await Promise.all([
+          api.get('/dashboard/stats'),
+          api.get('/opd?limit=5&status=Active'),
+          api.get('/inventory?limit=5&filter=low-stock'),
+        ]);
+        setStats(statsRes.data.stats);
+        setCharts(statsRes.data.charts);
+        setRecentQueue(opdRes.data.opdRegistrations || []);
+        setLowStockMeds(invRes.data.medicines || []);
+      } catch (err) {
+        console.error('Dashboard load error:', err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchDashboardData();
+    load();
   }, []);
-
-  // Premium charts colors
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
 
   if (loading) {
     return (
-      <div className="space-y-8 animate-pulse">
-        <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-2xl w-1/4"></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
+      <div className="space-y-6 fade-in">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skel className="h-7 w-48" />
+            <Skel className="h-4 w-64" />
+          </div>
+          <Skel className="h-9 w-32 rounded-lg" />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-96 bg-slate-200 dark:bg-slate-800 rounded-3xl"></div>
-          <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-3xl"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[...Array(4)].map((_, i) => <Skel key={i} className="h-36 rounded-2xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <Skel className="lg:col-span-2 h-80 rounded-2xl" />
+          <Skel className="h-80 rounded-2xl" />
         </div>
       </div>
     );
   }
 
-  // Define KPI cards configuration with rich premium colors and glowing shadows
   const kpiCards = [
     {
       title: 'Total Patients',
-      value: stats?.totalPatients || 0,
+      value: stats?.totalPatients?.toLocaleString() || '0',
+      desc: 'Registered patient profiles',
+      iconColor: 'blue', accent: 'blue',
       icon: Users,
-      desc: 'All registered patients',
-      glowClass: 'glow-blue',
-      iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 dark:bg-blue-500/20 border border-blue-500/20'
     },
     {
       title: 'Active Doctors',
-      value: stats?.totalDoctors || 0,
+      value: stats?.totalDoctors?.toLocaleString() || '0',
+      desc: 'Consultants on duty',
+      iconColor: 'green', accent: 'green',
       icon: Stethoscope,
-      desc: 'Consulting staff on duty',
-      glowClass: 'glow-blue',
-      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-500/20 border border-indigo-500/20'
     },
     {
-      title: "Today's OPD Queue",
-      value: stats?.todayOpd || 0,
-      icon: Activity,
-      desc: 'Active consultations today',
-      glowClass: 'glow-emerald',
-      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 dark:bg-emerald-500/20 border border-emerald-500/20'
+      title: "Today's OPD",
+      value: stats?.todayOpd?.toLocaleString() || '0',
+      desc: 'Registrations today',
+      iconColor: 'purple', accent: 'purple',
+      icon: CalendarDays,
     },
     {
       title: 'Outstanding Dues',
-      value: `₹${stats?.outstandingRevenue || '0.00'}`,
+      value: `₹${parseFloat(stats?.outstandingRevenue || 0).toLocaleString('en-IN')}`,
+      desc: `${stats?.pendingPaymentsCount || 0} unpaid invoices`,
+      iconColor: 'rose', accent: 'rose',
       icon: BadgeDollarSign,
-      desc: `${stats?.pendingPaymentsCount || 0} bills pending payment`,
-      glowClass: 'glow-red',
-      iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 dark:bg-rose-500/20 border border-rose-500/20'
-    }
+    },
   ];
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="glass-card p-4 rounded-xl border border-slate-200/80 dark:border-slate-800/80 shadow-xl text-xs">
-          <p className="font-bold text-slate-800 dark:text-slate-100 mb-1">{label}</p>
-          <p className="font-extrabold text-blue-600 dark:text-blue-400">
-            Revenue: ₹{payload[0].value.toLocaleString('en-IN')}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const CustomPieTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="glass-card p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80 shadow-lg text-xs">
-          <p className="font-bold text-slate-800 dark:text-slate-200">{payload[0].name}</p>
-          <p className="font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">
-            {payload[0].value} Patients
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const todayDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      
-      {/* Header Summary */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 fade-in">
+
+      {/* ── Page Header ── */}
+      <div className="page-header">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-850 dark:text-white tracking-tight">
-            Welcome back, {user?.username}!
+          <h2 className="page-title">
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.username} 👋
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 font-medium">
-            Here is the quick health overview of the hospital today.
+          <p className="page-subtitle">{todayDate} · Here's your hospital overview</p>
+        </div>
+        <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl text-[12px] font-semibold"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+          <Activity size={14} style={{ color: 'var(--brand)' }} />
+          <span>Live Dashboard</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        </div>
+      </div>
+
+      {/* ── Revenue Summary Banner ── */}
+      <div className="rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        style={{
+          background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)',
+          boxShadow: '0 8px 32px -4px rgba(37,99,235,0.35)'
+        }}>
+        <div>
+          <p className="text-blue-200 text-[11px] font-bold uppercase tracking-widest">Total Revenue Collected</p>
+          <p className="text-white text-4xl font-extrabold tracking-tight mt-1">
+            ₹{parseFloat(stats?.totalRevenue || 0).toLocaleString('en-IN')}
           </p>
+          <p className="text-blue-200 text-[13px] mt-1">Across all paid invoices</p>
         </div>
-        <div className="text-xs bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 text-blue-750 dark:text-blue-450 px-4 py-2.5 rounded-2xl font-bold border border-blue-500/20 dark:border-blue-500/10 shadow-xs">
-          Last updated: {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </div>
-      </div>
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpiCards.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={i}
-              className={`glass-card p-6 rounded-2xl flex flex-col justify-between hover-lift ${card.glowClass}`}
-            >
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-slate-450 dark:text-slate-450 uppercase tracking-widest">{card.title}</p>
-                  <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">{card.value}</h3>
-                </div>
-                <div className={`p-3 rounded-xl ${card.iconBg}`}>
-                  <Icon size={20} />
-                </div>
-              </div>
-              <p className="text-[11px] text-slate-450 dark:text-slate-500 mt-5 border-t border-slate-200/50 dark:border-slate-800/40 pt-3.5 font-medium">
-                {card.desc}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Charts section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Revenue Area Chart */}
-        <div className="lg:col-span-2 glass-card p-6 rounded-2xl flex flex-col justify-between glow-blue">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h4 className="font-extrabold text-slate-800 dark:text-white text-base tracking-tight">Monthly Cash Flow</h4>
-              <p className="text-[11px] text-slate-450 mt-0.5 font-medium">Total collected revenue (INR) over last 6 months</p>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-650 dark:text-emerald-450 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl shadow-xs">
-              <TrendingUp size={14} />
-              <span>Total: ₹{stats?.totalRevenue || 0}</span>
-            </div>
+        <div className="flex gap-4 flex-wrap">
+          <div className="text-center px-5 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.12)' }}>
+            <p className="text-white text-2xl font-bold">{stats?.totalDoctors || 0}</p>
+            <p className="text-blue-200 text-[11px] font-medium mt-0.5">Doctors</p>
           </div>
-          <div className="h-72 w-full">
-            {charts?.monthlyRevenue && charts.monthlyRevenue.length > 0 ? (
+          <div className="text-center px-5 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.12)' }}>
+            <p className="text-white text-2xl font-bold">{stats?.totalPatients || 0}</p>
+            <p className="text-blue-200 text-[11px] font-medium mt-0.5">Patients</p>
+          </div>
+          <div className="text-center px-5 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.12)' }}>
+            <p className="text-white text-2xl font-bold">{stats?.lowStockAlerts || 0}</p>
+            <p className="text-blue-200 text-[11px] font-medium mt-0.5">Low Stock</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {kpiCards.map((card) => <KpiCard key={card.title} {...card} />)}
+      </div>
+
+      {/* ── Charts Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {/* Area Chart */}
+        <div className="lg:col-span-2 card p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-[15px] font-bold" style={{ color: 'var(--text-primary)' }}>Revenue Trend</h3>
+              <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Monthly collections (₹ INR)</p>
+            </div>
+            <span className="badge badge-blue">
+              <TrendingUp size={11} className="mr-1" />
+              Last 6 months
+            </span>
+          </div>
+          <div className="h-64">
+            {charts?.monthlyRevenue?.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={charts.monthlyRevenue}>
                   <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#2563eb" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800/30" />
-                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} className="font-semibold" />
-                  <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} className="font-semibold" />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--text-muted)', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Area type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={2.5} fill="url(#revenueGrad)" dot={{ fill: '#2563eb', r: 4, strokeWidth: 0 }} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs font-semibold">No transaction records found to map.</div>
+              <div className="h-full flex items-center justify-center">
+                <div className="empty-state">
+                  <div className="empty-state-icon"><TrendingUp size={24} /></div>
+                  <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>No revenue data yet</p>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Department Visits Pie Chart */}
-        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between glow-blue">
-          <div>
-            <h4 className="font-extrabold text-slate-800 dark:text-white text-base tracking-tight">Department Traffic</h4>
-            <p className="text-[11px] text-slate-450 mt-0.5 font-medium">Outpatient distribution by medical department</p>
+        {/* Pie Chart */}
+        <div className="card p-6 flex flex-col">
+          <div className="mb-4">
+            <h3 className="text-[15px] font-bold" style={{ color: 'var(--text-primary)' }}>Department Visits</h3>
+            <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>OPD by speciality</p>
           </div>
-          <div className="h-60 w-full relative flex items-center justify-center my-4">
-            {charts?.departmentVisits && charts.departmentVisits.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 flex items-center justify-center">
+            {charts?.departmentVisits?.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie
-                    data={charts.departmentVisits}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {charts.departmentVisits.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                  <Pie data={charts.departmentVisits} cx="50%" cy="50%" innerRadius={55} outerRadius={78} paddingAngle={3} dataKey="value">
+                    {charts.departmentVisits.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip content={<CustomPieTooltip />} />
+                  <Tooltip formatter={(v, n) => [v, n]} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-slate-400 text-xs font-semibold">No active registrations mapped.</div>
+              <div className="empty-state">
+                <div className="empty-state-icon"><Package size={24} /></div>
+                <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>No OPD data</p>
+              </div>
             )}
           </div>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 border-t border-slate-200/50 dark:border-slate-800/40 pt-4">
-            {charts?.departmentVisits?.map((dept, index) => (
-              <div key={dept.name} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-450">
-                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-                <span>{dept.name} ({dept.value})</span>
+          <div className="flex flex-wrap gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+            {charts?.departmentVisits?.map((dept, i) => (
+              <div key={dept.name} className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                <span className="w-2 h-2 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                {dept.name}
               </div>
             ))}
           </div>
         </div>
-
       </div>
 
-      {/* Grid for Bottom Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* OPD Queue Summary (Left Column - Spans 2) */}
-        <div className="lg:col-span-2 glass-card p-6 rounded-2xl">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <span className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-500/20">
+      {/* ── Bottom Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {/* OPD Queue */}
+        <div className="lg:col-span-2 card overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-2.5">
+              <div className="icon-badge icon-badge-purple" style={{ width: 36, height: 36, borderRadius: 10 }}>
                 <Clock size={16} />
-              </span>
-              <h4 className="font-extrabold text-slate-800 dark:text-white text-base tracking-tight">Active OPD Queue</h4>
+              </div>
+              <div>
+                <h3 className="text-[14px] font-bold" style={{ color: 'var(--text-primary)' }}>Active Queue</h3>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Today's OPD registrations</p>
+              </div>
             </div>
             {['Admin', 'Receptionist'].includes(user?.role) && (
-              <Link to="/opd" className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 transition-colors">
-                Manage Queue <ArrowRight size={14} className="mt-0.5" />
+              <Link to="/opd" className="flex items-center gap-1.5 text-[12px] font-semibold transition-opacity hover:opacity-75"
+                style={{ color: 'var(--brand)' }}>
+                View all <ArrowRight size={13} />
               </Link>
             )}
           </div>
-          
           <div className="overflow-x-auto">
             {recentQueue.length > 0 ? (
-              <table className="w-full text-left text-sm border-collapse">
+              <table className="data-table">
                 <thead>
-                  <tr className="border-b border-slate-200/50 dark:border-slate-800/50 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-                    <th className="pb-3 px-3">Token</th>
-                    <th className="pb-3 px-3">Patient</th>
-                    <th className="pb-3 px-3">Assigned Doctor</th>
-                    <th className="pb-3 px-3">Department</th>
-                    <th className="pb-3 px-3 text-right">Status</th>
+                  <tr>
+                    <th>Token</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Department</th>
+                    <th className="text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200/40 dark:divide-slate-800/40">
+                <tbody>
                   {recentQueue.map((opd) => (
-                    <tr key={opd.id} className="hover:bg-slate-100/30 dark:hover:bg-slate-900/20 transition-colors group">
-                      <td className="py-4 px-3 font-extrabold text-blue-600 dark:text-blue-400">#{opd.token_number}</td>
-                      <td className="py-4 px-3">
-                        <div>
-                          <p className="font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{opd.patient?.name}</p>
-                          <p className="text-[10px] text-slate-450 font-semibold mt-0.5">{opd.patient?.patient_id}</p>
-                        </div>
+                    <tr key={opd.id}>
+                      <td>
+                        <span className="badge badge-blue font-bold">#{opd.token_number}</span>
                       </td>
-                      <td className="py-4 px-3 font-semibold text-slate-700 dark:text-slate-300">{opd.doctor?.name}</td>
-                      <td className="py-4 px-3 text-xs font-medium text-slate-500">{opd.department?.name}</td>
-                      <td className="py-4 px-3 text-right">
-                        <span className="inline-block text-[9px] bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-500/20 font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      <td>
+                        <p className="font-semibold text-[13px]" style={{ color: 'var(--text-primary)' }}>{opd.patient?.name}</p>
+                        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{opd.patient?.patient_id}</p>
+                      </td>
+                      <td className="font-medium text-[13px]" style={{ color: 'var(--text-secondary)' }}>{opd.doctor?.name}</td>
+                      <td className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{opd.department?.name}</td>
+                      <td className="text-right">
+                        <span className={`badge ${opd.status === 'Active' ? 'badge-green' : opd.status === 'Completed' ? 'badge-slate' : 'badge-amber'}`}>
                           {opd.status}
                         </span>
                       </td>
@@ -327,61 +327,69 @@ const Dashboard = () => {
                 </tbody>
               </table>
             ) : (
-              <div className="text-center py-8 text-slate-400 text-xs font-semibold">No active patients in consultation queue.</div>
+              <div className="empty-state">
+                <div className="empty-state-icon"><CheckCircle2 size={22} /></div>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>Queue is clear</p>
+                <p className="text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>No active registrations right now</p>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Low Stock Alerts (Right Column) */}
-        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <span className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20">
-                  <ShieldAlert size={16} />
-                </span>
-                <h4 className="font-extrabold text-slate-800 dark:text-white text-base tracking-tight">Stock Alerts</h4>
+        {/* Low Stock Alerts */}
+        <div className="card overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-2.5">
+              <div className="icon-badge icon-badge-amber" style={{ width: 36, height: 36, borderRadius: 10 }}>
+                <ShieldAlert size={16} />
               </div>
-              {stats?.lowStockAlerts > 0 && (
-                <span className="text-[10px] bg-rose-500/10 text-rose-650 dark:bg-rose-500/20 dark:text-rose-350 border border-rose-500/20 font-extrabold px-2.5 py-0.5 rounded-full animate-pulse">
-                  {stats.lowStockAlerts} items
-                </span>
-              )}
+              <div>
+                <h3 className="text-[14px] font-bold" style={{ color: 'var(--text-primary)' }}>Inventory Alerts</h3>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Low stock medicines</p>
+              </div>
             </div>
-
-            <div className="space-y-3">
-              {lowStockMeds.length > 0 ? (
-                lowStockMeds.map((med) => (
-                  <div key={med.id} className="flex justify-between items-center p-3.5 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/40 hover:scale-[1.01] transition-transform duration-200">
+            {stats?.lowStockAlerts > 0 && (
+              <span className="badge badge-rose">{stats.lowStockAlerts} items</span>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {lowStockMeds.length > 0 ? (
+              <div className="p-4 space-y-2.5">
+                {lowStockMeds.map((med) => (
+                  <div key={med.id} className="flex items-center justify-between p-3 rounded-xl"
+                    style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                     <div>
-                      <p className="font-bold text-slate-800 dark:text-slate-200 text-xs">{med.name}</p>
-                      <p className="text-[10px] font-semibold text-slate-450 mt-0.5">Batch: {med.batch_number} | Exp: {med.expiry_date}</p>
+                      <p className="font-semibold text-[13px]" style={{ color: 'var(--text-primary)' }}>{med.name}</p>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                        Exp: {med.expiry_date}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs font-extrabold text-rose-600 dark:text-rose-450">{med.quantity} left</span>
-                      <p className="text-[10px] font-semibold text-slate-450 mt-0.5">Min: {med.min_stock_level}</p>
+                      <p className="font-bold text-[13px]" style={{ color: '#dc2626' }}>{med.quantity}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>min {med.min_stock_level}</p>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-slate-400 text-xs font-semibold">All medicines are fully stocked.</div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-state-icon"><Pill size={22} /></div>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>All stocked up</p>
+                <p className="text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>Inventory levels are healthy</p>
+              </div>
+            )}
           </div>
-          
           {['Admin', 'Pharmacist'].includes(user?.role) && lowStockMeds.length > 0 && (
-            <Link
-              to="/inventory"
-              className="mt-6 flex items-center justify-center gap-1.5 w-full bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-750 hover:opacity-95 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl text-xs shadow-xs hover:shadow-md transition-all cursor-pointer"
-            >
-              Reorder / Restock Inventory
-              <ArrowRight size={14} />
-            </Link>
+            <div className="p-4 flex-shrink-0" style={{ borderTop: '1px solid var(--border)' }}>
+              <Link to="/inventory" className="btn btn-secondary w-full text-center text-[13px]">
+                <Package size={14} />
+                Manage Inventory
+              </Link>
+            </div>
           )}
         </div>
 
       </div>
-
     </div>
   );
 };
