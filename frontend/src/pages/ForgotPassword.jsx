@@ -27,30 +27,30 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 transition-colors">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#080b11] px-4 transition-colors duration-200">
+      <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
         
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center bg-blue-600 dark:bg-blue-500 text-white p-3 rounded-2xl shadow-lg mb-3">
-            <Stethoscope size={32} />
+          <div className="inline-flex items-center justify-center bg-gradient-to-tr from-blue-600 to-indigo-600 text-white p-4 rounded-2xl shadow-xl shadow-blue-500/20 mb-4 glow-blue">
+            <Stethoscope size={30} />
           </div>
-          <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white">
+          <h2 className="text-3xl font-extrabold tracking-tight text-gradient-primary">
             Reset Password
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1.5 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-semibold">
             Enter your email to restore your credentials
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md">
+        <div className="glass-card p-8 rounded-3xl glow-blue">
           {successMsg ? (
-            <div className="text-center space-y-4">
-              <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium">
+            <div className="text-center space-y-5">
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-xl text-sm font-semibold">
                 {successMsg}
               </div>
               <button
                 onClick={() => navigate('/login')}
-                className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-bold transition-colors cursor-pointer"
               >
                 <ArrowLeft size={16} /> Back to Login
               </button>
@@ -59,7 +59,7 @@ const ForgotPassword = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
@@ -69,10 +69,10 @@ const ForgotPassword = () => {
                   <input
                     type="email"
                     placeholder="name@hims.com"
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/50 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all ${
+                    className={`w-full pl-10 pr-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/40 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all duration-200 ${
                       errors.email
-                        ? 'border-red-500 focus:ring-1 focus:ring-red-500'
-                        : 'border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        ? 'border-red-500 focus:ring-2 focus:ring-red-500/10 focus:border-red-500'
+                        : 'border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10'
                     }`}
                     {...register('email', { 
                       required: 'Email is required',
@@ -91,7 +91,7 @@ const ForgotPassword = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition-all focus:outline-hidden hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-101 active:scale-99 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
               >
                 {submitting ? 'Verifying...' : 'Recover Credentials'}
               </button>
@@ -100,7 +100,7 @@ const ForgotPassword = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:underline"
+                  className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 transition-colors cursor-pointer"
                 >
                   <ArrowLeft size={14} /> Back to Login
                 </button>

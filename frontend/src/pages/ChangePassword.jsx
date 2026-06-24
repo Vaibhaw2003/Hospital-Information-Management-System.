@@ -28,29 +28,31 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md max-w-md mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="bg-blue-100 dark:bg-blue-900/50 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
+    <div className="glass-card p-8 rounded-3xl glow-blue max-w-md mx-auto animate-in fade-in zoom-in-95 duration-350">
+      <div className="flex items-center gap-3.5 mb-8">
+        <div className="bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 border border-blue-500/20 dark:border-blue-500/30 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
           <Key size={20} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">Change Password</h2>
-          <p className="text-xs text-slate-400">Secure your account with a new password</p>
+          <h2 className="text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">Change Password</h2>
+          <p className="text-[11px] font-semibold text-slate-450 mt-0.5">Secure your account with a new password</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         
-        {/* Old Password */}
+        {/* Current Password */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
             Current Password
           </label>
           <input
             type="password"
             placeholder="••••••••"
-            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/50 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all ${
-              errors.oldPassword ? 'border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-blue-500'
+            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/40 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all duration-200 ${
+              errors.oldPassword
+                ? 'border-red-500 focus:ring-2 focus:ring-red-500/10 focus:border-red-500'
+                : 'border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10'
             }`}
             {...register('oldPassword', { required: 'Current password is required' })}
           />
@@ -61,14 +63,16 @@ const ChangePassword = () => {
 
         {/* New Password */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
             New Password
           </label>
           <input
             type="password"
             placeholder="••••••••"
-            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/50 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all ${
-              errors.newPassword ? 'border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-blue-500'
+            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/40 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all duration-200 ${
+              errors.newPassword
+                ? 'border-red-500 focus:ring-2 focus:ring-red-500/10 focus:border-red-500'
+                : 'border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10'
             }`}
             {...register('newPassword', { 
               required: 'New password is required',
@@ -82,14 +86,16 @@ const ChangePassword = () => {
 
         {/* Confirm New Password */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
             Confirm New Password
           </label>
           <input
             type="password"
             placeholder="••••••••"
-            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/50 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all ${
-              errors.confirmPassword ? 'border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-blue-500'
+            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 dark:bg-slate-900/40 text-sm text-slate-800 dark:text-white focus:outline-hidden transition-all duration-200 ${
+              errors.confirmPassword
+                ? 'border-red-500 focus:ring-2 focus:ring-red-500/10 focus:border-red-500'
+                : 'border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10'
             }`}
             {...register('confirmPassword', { 
               required: 'Please confirm your new password',
@@ -106,14 +112,14 @@ const ChangePassword = () => {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="flex-1 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold py-3 px-4 rounded-xl text-center text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+            className="flex-1 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 font-bold py-3 px-4 rounded-xl text-center text-sm hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-all cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="flex-1 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition-all disabled:opacity-50 text-sm"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/20 hover:scale-101 active:scale-99 transition-all disabled:opacity-50 text-sm cursor-pointer"
           >
             {submitting ? 'Updating...' : 'Update Password'}
           </button>
