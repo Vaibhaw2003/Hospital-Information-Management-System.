@@ -52,6 +52,19 @@ const runIntegrationTest = async () => {
     const recepToken = recepLogin.body.token;
     console.log('Receptionist logged in successfully.');
 
+    // Fetch initial inventory levels
+    const initialInv = await request('GET', '/api/inventory', null, {
+      'Authorization': `Bearer ${recepToken}`
+    });
+    if (initialInv.statusCode !== 200) {
+      throw new Error(`Failed to fetch initial inventory: ${JSON.stringify(initialInv.body)}`);
+    }
+    const initialMeds = initialInv.body.medicines;
+    const initialParaQty = initialMeds.find(m => m.id === 1)?.quantity || 0;
+    const initialIbuQty = initialMeds.find(m => m.id === 3)?.quantity || 0;
+    console.log(`Initial Inventory levels - Paracetamol: ${initialParaQty}, Ibuprofen: ${initialIbuQty}`);
+
+
     // 2. REGISTER A PATIENT
     console.log('\n[Step 2] Registering a new patient...');
     const patientData = {
@@ -210,10 +223,10 @@ const runIntegrationTest = async () => {
     const paracetamol = medicines.find(m => m.id === 1);
     const ibuprofen = medicines.find(m => m.id === 3);
 
-    console.log(`Paracetamol stock count: ${paracetamol.quantity} (Expected: 140)`);
-    console.log(`Ibuprofen stock count: ${ibuprofen.quantity} (Expected: 75)`);
+    console.log(`Paracetamol stock count: ${paracetamol.quantity} (Expected: ${initialParaQty - 10})`);
+    console.log(`Ibuprofen stock count: ${ibuprofen.quantity} (Expected: ${initialIbuQty - 5})`);
 
-    if (paracetamol.quantity !== 140 || ibuprofen.quantity !== 75) {
+    if (paracetamol.quantity !== (initialParaQty - 10) || ibuprofen.quantity !== (initialIbuQty - 5)) {
       throw new Error('Inventory deduction does not match expected values.');
     }
 
