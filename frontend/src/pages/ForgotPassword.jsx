@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail, ArrowLeft, Activity, CheckCircle } from 'lucide-react';
+import { Mail, ArrowLeft, Activity, CheckCircle, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ForgotPassword = () => {
@@ -15,7 +15,7 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data) => {
     setSubmitting(true);
-    const result = await forgotPassword(data.email);
+    const result = await forgotPassword(data.hospitalCode, data.email);
     setSubmitting(false);
     if (result.success) {
       toast.success('Reset instruction triggered!');
@@ -69,6 +69,24 @@ const ForgotPassword = () => {
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                  <label className="form-label">Hospital Code</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none" style={{ color: 'var(--text-muted)' }}>
+                      <Building2 size={16} />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="APOLLO"
+                      className="form-input uppercase"
+                      style={{ paddingLeft: '38px', borderColor: errors.hospitalCode ? '#dc2626' : undefined }}
+                      {...register('hospitalCode', { required: 'Hospital code is required' })}
+                    />
+                  </div>
+                  {errors.hospitalCode && (
+                    <p className="text-[12px] font-medium mt-1.5" style={{ color: '#dc2626' }}>{errors.hospitalCode.message}</p>
+                  )}
+                </div>
                 <div>
                   <label className="form-label">Email Address</label>
                   <div className="relative">

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@custom-variant dark (&:where(.dark, .dark *));
 /* ─────────────────────────────────────────────
    HIMS PREMIUM DESIGN SYSTEM
    Vibrant Medical SaaS — Light & Dark Mode

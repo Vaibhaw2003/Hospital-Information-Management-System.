@@ -17,14 +17,14 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (usernameOrEmail, password) => {
+  const login = async (hospitalCode, usernameOrEmail, password) => {
     try {
-      const response = await api.post('/auth/login', { usernameOrEmail, password });
-      const { token, user: userData } = response.data;
+      const response = await api.post('/auth/login', { hospitalCode, usernameOrEmail, password });
+      const { token, user: userData, hospital: hospitalData } = response.data;
       
       localStorage.setItem('hims_token', token);
-      localStorage.setItem('hims_user', JSON.stringify(userData));
-      setUser(userData);
+      localStorage.setItem('hims_user', JSON.stringify({ ...userData, hospital: hospitalData }));
+      setUser({ ...userData, hospital: hospitalData });
       
       return { success: true };
     } catch (error) {
@@ -49,9 +49,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const forgotPassword = async (email) => {
+  const forgotPassword = async (hospitalCode, email) => {
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      const response = await api.post('/auth/forgot-password', { hospitalCode, email });
       return { success: true, message: response.data.message };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to process forgot password request.';

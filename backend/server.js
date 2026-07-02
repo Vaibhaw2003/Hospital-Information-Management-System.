@@ -79,8 +79,24 @@ const startServer = async () => {
     console.log('✅ Master database ready.');
 
     // Pre-warm tenant connections for all active hospitals
-    const { getTenantDB } = require('./config/tenantDB');
-    const hospitals = await Hospital.findAll({ where: { status: 'Active' } });
+    const { getTenantDB, createTenantDB } = require('./config/tenantDB');
+    let hospitals = await Hospital.findAll({ where: { status: 'Active' } });
+
+    // Seed Apollo Hospital for demo if it doesn't exist
+    if (hospitals.length === 0) {
+      console.log('🌱 Seeding demo hospital APOLLO...');
+      const apollo = await Hospital.create({
+        name: 'Apollo Hospital',
+        code: 'APOLLO',
+        db_name: 'hims_tenant_apollo',
+        admin_email: 'admin@apollo.com',
+        admin_phone: '1234567890',
+        address: 'Demo City'
+      });
+      hospitals = [apollo];
+      await createTenantDB('APOLLO', 'hims_tenant_apollo', 'Apollo Hospital');
+    }
+
     for (const h of hospitals) {
       try {
         await getTenantDB(h.code, h.db_name);
@@ -96,7 +112,7 @@ const startServer = async () => {
       console.log(`   API: http://localhost:${PORT}/api/health\n`);
     });
   } catch (error) {
-    console.error('❌ Server startup failed:', error.message);
+    console.error('❌ Server startup failed:', error);
     process.exit(1);
   }
 };

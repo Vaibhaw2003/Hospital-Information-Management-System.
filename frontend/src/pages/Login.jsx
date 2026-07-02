@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Activity, Lock, User, Eye, EyeOff, ArrowRight, Stethoscope, Users, Pill, ClipboardList } from 'lucide-react';
+import { Activity, Lock, User, Eye, EyeOff, ArrowRight, Stethoscope, Users, Pill, ClipboardList, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const DEMO_ACCOUNTS = [
-  { role: 'Admin', user: 'admin', pass: 'admin123', color: '#f43f5e', bg: 'rgba(244,63,94,0.08)' },
-  { role: 'Doctor', user: 'doctor', pass: 'doctor123', color: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
-  { role: 'Receptionist', user: 'receptionist', pass: 'recep123', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-  { role: 'Pharmacist', user: 'pharmacist', pass: 'pharma123', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+  { role: 'Admin', user: 'admin', pass: 'admin123', code: 'APOLLO', color: '#f43f5e', bg: 'rgba(244,63,94,0.08)' },
+  { role: 'Doctor', user: 'doctor', pass: 'doctor123', code: 'APOLLO', color: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
+  { role: 'Receptionist', user: 'receptionist', pass: 'recep123', code: 'APOLLO', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
+  { role: 'Pharmacist', user: 'pharmacist', pass: 'pharma123', code: 'APOLLO', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
 ];
 
 const FEATURES = [
@@ -36,7 +36,7 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     setSubmitting(true);
-    const result = await login(data.usernameOrEmail, data.password);
+    const result = await login(data.hospitalCode, data.usernameOrEmail, data.password);
     setSubmitting(false);
     if (result.success) {
       toast.success('Welcome back!');
@@ -47,6 +47,7 @@ const Login = () => {
   };
 
   const fillDemo = (account) => {
+    setValue('hospitalCode', account.code);
     setValue('usernameOrEmail', account.user);
     setValue('password', account.pass);
   };
@@ -160,6 +161,28 @@ const Login = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+            {/* Hospital Code */}
+            <div>
+              <label className="form-label">Hospital Code</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none" style={{ color: 'var(--text-muted)' }}>
+                  <Building2 size={16} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="APOLLO"
+                  className="form-input uppercase"
+                  style={{ paddingLeft: '38px', borderColor: errors.hospitalCode ? '#dc2626' : undefined }}
+                  {...register('hospitalCode', { required: 'Hospital code is required' })}
+                />
+              </div>
+              {errors.hospitalCode && (
+                <p className="text-[12px] font-medium mt-1.5" style={{ color: '#dc2626' }}>
+                  {errors.hospitalCode.message}
+                </p>
+              )}
+            </div>
 
             {/* Username */}
             <div>
